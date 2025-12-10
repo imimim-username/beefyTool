@@ -47,3 +47,13 @@ lerna-debug.log*
 # Temporary files
 *.tmp
 *.temp
+
+# TypeScript compiled config files
+vite.config.js
+vite.config.js.map
+vite.config.d.ts
+vite.config.d.ts.map
+hardhat.config.js
+hardhat.config.js.map
+hardhat.config.d.ts
+hardhat.config.d.ts.map

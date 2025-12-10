@@ -130,17 +130,17 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 ### Tasks
 
-- [ ] In `src/core/config/model.ts`:
-  - [ ] Define `StrategyConfig`, `ConfigVersion`, and related types.
-  - [ ] Include fields for:
-    - [ ] `configVersion`.
-    - [ ] `name`, `network`, `strategyFamily`, `dex`.
-    - [ ] `lpTokenAddress`, `gaugeAddress`/`stakingAddress`.
-    - [ ] `rewardToken`.
-    - [ ] `routes` (with typed structures for reward→native, reward→lp0, reward→lp1).
-    - [ ] `vaultMode` (`'strategy-only' | 'vault-and-strategy'`).
-    - [ ] `beefyCore` (keeper, vaultFactory, feeRecipient, feeConfig).
-    - [ ] `complexity` (`'basic' | 'intermediate' | 'advanced'`).
+- [x] In `src/core/config/model.ts`:
+  - [x] Define `StrategyConfig`, `ConfigVersion`, and related types.
+  - [x] Include fields for:
+    - [x] `configVersion`.
+    - [x] `name`, `network`, `strategyFamily`, `dex`.
+    - [x] `lpTokenAddress`, `gaugeAddress`/`stakingAddress`.
+    - [x] `rewardToken`.
+    - [x] `routes` (with typed structures for reward→native, reward→lp0, reward→lp1).
+    - [x] `vaultMode` (`'strategy-only' | 'vault-and-strategy'`).
+    - [x] `beefyCore` (keeper, vaultFactory, feeRecipient, feeConfig).
+    - [x] `complexity` (`'basic' | 'intermediate' | 'advanced'`).
 
 - [ ] In `src/core/config/io.ts`:
   - [ ] Implement functions to read/write `strategy-config.json`.
