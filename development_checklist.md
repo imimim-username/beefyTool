@@ -87,36 +87,36 @@ Developers can work through this in order, opening PRs per milestone (or groupin
   development_checklist.md
   ```
 
-- [ ] Add placeholder modules in `src/core/` with docstrings/stubs:
-  - [ ] `core/index.ts`
-  - [ ] `core/config/model.ts`
-  - [ ] `core/config/io.ts`
-  - [ ] `core/config/validation.ts`
-  - [ ] `core/config/migration.ts` (for config version migrations)
-  - [ ] `core/networks.ts`
-  - [ ] `core/dex/solidlyVelodrome.ts`
-  - [ ] `core/beefy/addressBook.ts`
-  - [ ] `core/beefy/strategyFamilies.ts`
-  - [ ] `core/generators/orchestrator.ts`
-  - [ ] `core/generators/contracts.ts`
-  - [ ] `core/generators/hardhatProject.ts`
-  - [ ] `core/generators/deployScripts.ts`
-  - [ ] `core/generators/tests.ts`
-  - [ ] `core/utils/fsUtils.ts`
-  - [ ] `core/utils/templating.ts` (EJS template rendering)
-  - [ ] `core/utils/prompts.ts`
-  - [ ] `core/utils/errors.ts` (error types and utilities)
-- [ ] Set up EJS template engine:
-  - [ ] Install `ejs` npm package.
-  - [ ] Create basic templating utility in `core/utils/templating.ts`.
+- [x] Add placeholder modules in `src/core/` with docstrings/stubs:
+  - [x] `core/index.ts`
+  - [x] `core/config/model.ts`
+  - [x] `core/config/io.ts`
+  - [x] `core/config/validation.ts`
+  - [x] `core/config/migration.ts` (for config version migrations)
+  - [x] `core/networks.ts`
+  - [x] `core/dex/solidlyVelodrome.ts`
+  - [x] `core/beefy/addressBook.ts`
+  - [x] `core/beefy/strategyFamilies.ts`
+  - [x] `core/generators/orchestrator.ts`
+  - [x] `core/generators/contracts.ts`
+  - [x] `core/generators/hardhatProject.ts`
+  - [x] `core/generators/deployScripts.ts`
+  - [x] `core/generators/tests.ts`
+  - [x] `core/utils/fsUtils.ts`
+  - [x] `core/utils/templating.ts` (EJS template rendering)
+  - [x] `core/utils/prompts.ts`
+  - [x] `core/utils/errors.ts` (error types and utilities)
+- [x] Set up EJS template engine:
+  - [x] Install `ejs` npm package.
+  - [x] Create basic templating utility in `core/utils/templating.ts`.
 
-- [ ] Add `.gitignore` (exclude `node_modules`, `.env`, `dist`, `out`, `artifacts`, `cache`, etc.).
+- [x] Add `.gitignore` (exclude `node_modules`, `.env`, `dist`, `out`, `artifacts`, `cache`, etc.).
 
 ### Tests / Acceptance Criteria
 
-- [ ] `npm test` runs and passes a trivial placeholder test.
-- [ ] `npm run dev` starts the Vite dev server without errors.
-- [ ] `npm run hardhat:compile` (or `npx hardhat compile`) succeeds with a stub config.
+- [x] `npm test` runs and passes a trivial placeholder test.
+- [x] `npm run dev` starts the Vite dev server without errors.
+- [x] `npm run hardhat:compile` (or `npx hardhat compile`) succeeds with a stub config.
 
 **PR:** _Initialize repo structure and basic tooling_
 
