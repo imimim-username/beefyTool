@@ -1,5 +1,5 @@
 {
-  "name": "beefytool",
+  "name": "beefyTool",
   "version": "0.1.0",
   "description": "A modular, extensible TypeScript + Hardhat-based tool that interactively generates ready-to-compile Beefy vault + strategy projects for EVM chains",
   "type": "module",
