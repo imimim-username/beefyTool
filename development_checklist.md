@@ -47,7 +47,7 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 ### Tasks
 
-- [ ] Initialize a new Git repository.
+- [x] Initialize a new Git repository.
 - [ ] Add minimal `package.json` with:
   - [ ] Project metadata (name `beefyTool`, version, description).
   - [ ] Scripts:
