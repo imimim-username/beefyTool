@@ -114,9 +114,9 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 ### Tests / Acceptance Criteria
 
-- [ ] `npm test` runs and passes a trivial placeholder test.
-- [ ] `npm run dev` starts the Vite dev server without errors.
-- [ ] `npm run hardhat:compile` (or `npx hardhat compile`) succeeds with a stub config.
+- [x] `npm test` runs and passes a trivial placeholder test.
+- [x] `npm run dev` starts the Vite dev server without errors.
+- [x] `npm run hardhat:compile` (or `npx hardhat compile`) succeeds with a stub config.
 
 **PR:** _Initialize repo structure and basic tooling_
 
