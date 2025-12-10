@@ -36,7 +36,7 @@ The output is a **strategy project folder** containing:
 The architecture is organized around the following core concepts:
 
 - **Config model** – how strategies are described as data.
-- **Network/DEX metadata** – chain addresses, routers, and Beefy core infra.
+- **Network/DEX metadata** – chain addresses and Beefy core infra.
 - **Generators** – how config + templates are turned into actual files.
 - **Templates** – EJS templates for Solidity, TypeScript, and JSON used by generators.
 - **Web UI** – React-based interface with local API server for file generation.
@@ -54,8 +54,7 @@ beefyTool/
 │   │   ├── index.ts
 │   │   ├── networks.ts
 │   │   ├── dex/
-│   │   │   ├── solidlyVelodrome.ts
-│   │   │   └── routers.ts
+│   │   │   └── solidlyVelodrome.ts
 │   │   ├── config/
 │   │   │   ├── model.ts
 │   │   │   ├── io.ts
@@ -154,16 +153,12 @@ Generators use this to:
 
 `solidlyVelodrome.ts` encodes DEX-specific rules for the initial strategy family:
 
-- Known routers and factory addresses per network.
 - Any DEX-specific nuances (e.g., how gauges are structured).
+- (Optional) Helper functions for LP token info retrieval.
 
-`routers.ts` captures information about route behavior and supported swap paths so the UI can:
+**Note:** Router addresses are not needed here. Strategies use Beefy's router from the addressBook (part of `CommonAddresses`), not separate DEX routers.
 
-- Offer sensible default routes.
-- Validate that each route starts and ends with the correct tokens.
-- (Future) Simulate routes on-chain to verify feasibility and liquidity.
-
-Route validation currently checks token addresses match; future versions may validate route existence via DEX router contracts on a fork.
+Route validation currently checks token addresses match; future versions may validate route existence via Beefy's router on a fork.
 
 ### 4.3 Beefy Metadata (`src/core/beefy/`)
 
@@ -240,7 +235,7 @@ Generates:
   - Import compatible OpenZeppelin 0.8 contracts.
   - Extend the appropriate Beefy base for Solidly-style LP strategies.
   - Use a `StratFeeManager`/`CommonAddresses`-style pattern and dynamic fee config.
-  - Wire in `want`, `gauge`, router, Beefy core addresses, and swap routes.
+  - Wire in `want`, `gauge`, Beefy core addresses (including router from `CommonAddresses`), and swap routes.
   - Include standard Beefy lifecycle methods (deposit, withdraw, harvest, emergency handling).
 
 - Optionally, a thin **vault wrapper/initializer** when `vaultMode === 'vault-and-strategy'`, using a template such as `VaultWrapper.sol.ejs`. This encapsulates:
@@ -286,7 +281,7 @@ Key pieces:
 - `components/NetworkSelector.tsx` — chooses chain.
 - `components/DexStrategyForm.tsx` — gathers LP, gauge, reward token, and DEX-specific info.
 - `components/VaultStrategyToggle.tsx` — toggles between strategy-only vs vault+strategy modes.
-- `components/RoutesEditor.tsx` — configures swap routes (with auto-suggestions where possible).
+- `components/RoutesEditor.tsx` — configures swap routes as simple arrays of token addresses.
 - `components/SummaryView.tsx` — shows a final summary of the assembled `StrategyConfig`.
 - `components/OutputPreview.tsx` — shows code snippets and file structure previews before generation.
 - `components/ErrorDisplay.tsx` — displays validation and generation errors to users.
