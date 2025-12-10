@@ -166,12 +166,12 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 ### Tests / Acceptance Criteria
 
-- [ ] `tests/core/configValidation.test.ts`:
-  - [ ] Valid config passes.
-  - [ ] Invalid network fails.
-  - [ ] Missing LP token fails.
-  - [ ] Invalid address format fails.
-  - [ ] Routes with incorrect endpoints fail.
+- [x] `tests/core/configValidation.test.ts`:
+  - [x] Valid config passes.
+  - [x] Invalid network fails.
+  - [x] Missing LP token fails.
+  - [x] Invalid address format fails.
+  - [x] Routes with incorrect endpoints fail.
 
 **PR:** _Add StrategyConfig model and validation_
 
