@@ -142,19 +142,19 @@ Developers can work through this in order, opening PRs per milestone (or groupin
     - [x] `beefyCore` (keeper, vaultFactory, feeRecipient, feeConfig).
     - [x] `complexity` (`'basic' | 'intermediate' | 'advanced'`).
 
-- [ ] In `src/core/config/io.ts`:
-  - [ ] Implement functions to read/write `strategy-config.json`.
-  - [ ] Ensure `configVersion` is included and validated.
-  - [ ] Call migration utility if config version is older than current.
+- [x] In `src/core/config/io.ts`:
+  - [x] Implement functions to read/write `strategy-config.json`.
+  - [x] Ensure `configVersion` is included and validated.
+  - [x] Call migration utility if config version is older than current.
 
-- [ ] In `src/core/config/validation.ts`:
-  - [ ] Validate:
-    - [ ] Supported `network` values.
-    - [ ] Supported `strategyFamily` and `dex` values.
-    - [ ] Address format (basic 0x checks, plus optional checksum check).
-    - [ ] Presence of required fields given `vaultMode` and strategy family.
-    - [ ] Route start/end tokens match reward/native/LP tokens.
-    - [ ] Strategy name is safe for filesystem usage (no path traversal, valid characters).
+- [x] In `src/core/config/validation.ts`:
+  - [x] Validate:
+    - [x] Supported `network` values.
+    - [x] Supported `strategyFamily` and `dex` values.
+    - [x] Address format (basic 0x checks, plus optional checksum check).
+    - [x] Presence of required fields given `vaultMode` and strategy family.
+    - [x] Route start/end tokens match reward/native/LP tokens.
+    - [x] Strategy name is safe for filesystem usage (no path traversal, valid characters).
 
 - [ ] In `src/core/config/migration.ts`:
   - [ ] Create migration framework (placeholder for now).
@@ -166,12 +166,12 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 ### Tests / Acceptance Criteria
 
-- [ ] `tests/core/configValidation.test.ts`:
-  - [ ] Valid config passes.
-  - [ ] Invalid network fails.
-  - [ ] Missing LP token fails.
-  - [ ] Invalid address format fails.
-  - [ ] Routes with incorrect endpoints fail.
+- [x] `tests/core/configValidation.test.ts`:
+  - [x] Valid config passes.
+  - [x] Invalid network fails.
+  - [x] Missing LP token fails.
+  - [x] Invalid address format fails.
+  - [x] Routes with incorrect endpoints fail.
 
 **PR:** _Add StrategyConfig model and validation_
 
