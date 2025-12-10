@@ -63,9 +63,9 @@ Developers can work through this in order, opening PRs per milestone (or groupin
   - [x] TypeScript support.
   - [x] Placeholder networks (no RPC URLs needed yet).
 
-- [ ] Add basic Vite + React setup:
-  - [ ] `src/web/main.tsx`
-  - [ ] `src/web/App.tsx` with a “Hello, beefyTool” placeholder.
+- [x] Add basic Vite + React setup:
+  - [x] `src/web/main.tsx`
+  - [x] `src/web/App.tsx` with a “Hello, beefyTool” placeholder.
 
 - [x] Create directory layout:
 
