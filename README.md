@@ -31,8 +31,7 @@ beefyTool/
 │   │   │   └── validation.ts      # Validation logic
 │   │   ├── networks.ts            # Supported chains (mainnet, optimism, arbitrum, base)
 │   │   ├── dex/
-│   │   │   ├── solidlyVelodrome.ts# Solidly-style DEX metadata (Velodrome/Aerodrome, etc.)
-│   │   │   └── routers.ts         # Router metadata / helpers
+│   │   │   └── solidlyVelodrome.ts# Solidly-style DEX metadata (Velodrome/Aerodrome, etc.)
 │   │   ├── beefy/
 │   │   │   ├── addressBook.ts     # Beefy infra addresses (vaultFactory, feeConfig, keeper, etc.)
 │   │   │   └── strategyFamilies.ts# Strategy family definitions (initially: Solidly LP)
@@ -207,7 +206,7 @@ You’ll be asked to provide:
   - Reward → native
   - Reward → LP token0
   - Reward → LP token1  
-  The wizard can auto-suggest routes based on known routers and token lists, but you can override them.
+  Routes are simple arrays of token addresses (e.g., `[REWARD_TOKEN, NATIVE_TOKEN]`).
 
 - **Beefy options**:
   - Strategy family (initially: Solidly LP)
