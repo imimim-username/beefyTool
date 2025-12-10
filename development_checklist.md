@@ -142,10 +142,10 @@ Developers can work through this in order, opening PRs per milestone (or groupin
     - [x] `beefyCore` (keeper, vaultFactory, feeRecipient, feeConfig).
     - [x] `complexity` (`'basic' | 'intermediate' | 'advanced'`).
 
-- [ ] In `src/core/config/io.ts`:
-  - [ ] Implement functions to read/write `strategy-config.json`.
-  - [ ] Ensure `configVersion` is included and validated.
-  - [ ] Call migration utility if config version is older than current.
+- [x] In `src/core/config/io.ts`:
+  - [x] Implement functions to read/write `strategy-config.json`.
+  - [x] Ensure `configVersion` is included and validated.
+  - [x] Call migration utility if config version is older than current.
 
 - [ ] In `src/core/config/validation.ts`:
   - [ ] Validate:
