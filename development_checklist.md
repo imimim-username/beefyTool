@@ -147,14 +147,14 @@ Developers can work through this in order, opening PRs per milestone (or groupin
   - [x] Ensure `configVersion` is included and validated.
   - [x] Call migration utility if config version is older than current.
 
-- [ ] In `src/core/config/validation.ts`:
-  - [ ] Validate:
-    - [ ] Supported `network` values.
-    - [ ] Supported `strategyFamily` and `dex` values.
-    - [ ] Address format (basic 0x checks, plus optional checksum check).
-    - [ ] Presence of required fields given `vaultMode` and strategy family.
-    - [ ] Route start/end tokens match reward/native/LP tokens.
-    - [ ] Strategy name is safe for filesystem usage (no path traversal, valid characters).
+- [x] In `src/core/config/validation.ts`:
+  - [x] Validate:
+    - [x] Supported `network` values.
+    - [x] Supported `strategyFamily` and `dex` values.
+    - [x] Address format (basic 0x checks, plus optional checksum check).
+    - [x] Presence of required fields given `vaultMode` and strategy family.
+    - [x] Route start/end tokens match reward/native/LP tokens.
+    - [x] Strategy name is safe for filesystem usage (no path traversal, valid characters).
 
 - [ ] In `src/core/config/migration.ts`:
   - [ ] Create migration framework (placeholder for now).
