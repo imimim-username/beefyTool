@@ -57,7 +57,7 @@ Developers can work through this in order, opening PRs per milestone (or groupin
     - [x] `hardhat:compile` → `hardhat compile`.
     - [x] `hardhat:test` → `hardhat test`.
 
-- [ ] Add `tsconfig.json` with reasonable TS settings for Node + React + Hardhat.
+- [x] Add `tsconfig.json` with reasonable TS settings for Node + React + Hardhat.
 - [x] Add root-level `hardhat.config.ts` with:
   - [x] Basic Solidity 0.8.x config.
   - [x] TypeScript support.
