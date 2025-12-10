@@ -140,7 +140,7 @@ Developers can work through this in order, opening PRs per milestone (or groupin
     - [x] `routes` (with typed structures for reward→native, reward→lp0, reward→lp1).
     - [x] `vaultMode` (`'strategy-only' | 'vault-and-strategy'`).
     - [x] `beefyCore` (keeper, vaultFactory, feeRecipient, feeConfig).
-    - [x] `complexity` (`'basic' | 'intermediate' | 'advanced'`).
+    - [x] Note: Router is part of Beefy's infrastructure (from addressBook), not user input.
 
 - [x] In `src/core/config/io.ts`:
   - [x] Implement functions to read/write `strategy-config.json`.
@@ -192,14 +192,9 @@ Developers can work through this in order, opening PRs per milestone (or groupin
     - [ ] Optional suggested fork block.
 
 - [ ] In `src/core/dex/solidlyVelodrome.ts`:
-  - [ ] Define types for Solidly-style pools.
-  - [ ] For each supported network:
-    - [ ] Add router address (for Velodrome/Aerodrome/etc.).
-    - [ ] Add factory address (if needed).
-  - [ ] Provide helper functions such as:
-    - [ ] `getRouterForNetwork(network, dex)`.
-    - [ ] (Stub) `getLpTokenInfo(provider, lpTokenAddress)` for later enrichment.
-    - [ ] (Stub) `validateRoute(provider, route, dex)` for later route validation.
+  - [ ] Define types for Solidly-style pools (if needed for future features).
+  - [ ] (Stub) `getLpTokenInfo(provider, lpTokenAddress)` for later enrichment (optional).
+  - [ ] Note: Router addresses are not needed - strategies use Beefy's router from the addressBook.
 
 - [ ] In `src/core/beefy/addressBook.ts`:
   - [ ] For each network:
@@ -278,7 +273,8 @@ Developers can work through this in order, opening PRs per milestone (or groupin
     - [ ] Imports appropriate OpenZeppelin 0.8 contracts.
     - [ ] Extends the correct Beefy base for Solidly LP strategies (to be chosen when integrating with Beefy’s code).
     - [ ] Uses a `StratFeeManager`/`CommonAddresses` pattern for shared addresses.
-    - [ ] Declares key immutable fields: `want`, `gauge`, `router`, reward token, etc.
+    - [ ] Declares key immutable fields: `want`, `gauge`, reward token, etc.
+    - [ ] Note: Router comes from Beefy's `CommonAddresses` (not a separate DEX router).
     - [ ] Encodes routes for harvest path (reward→native, reward→LP tokens).
     - [ ] Implements standard Beefy methods at least in minimal form (deposit, withdraw, harvest, emergency behavior).
 
@@ -471,7 +467,7 @@ Developers can work through this in order, opening PRs per milestone (or groupin
   - [ ] `NetworkSelector.tsx` (dropdown).
   - [ ] `DexStrategyForm.tsx` (inputs for LP, gauge, reward token).
   - [ ] `VaultStrategyToggle.tsx` (radio buttons or switch).
-  - [ ] `RoutesEditor.tsx` (manual route editing; auto-suggest later).
+  - [ ] `RoutesEditor.tsx` (simple arrays of token addresses for routes).
   - [ ] `SummaryView.tsx` (read-only config summary).
   - [ ] `OutputPreview.tsx` (optional preview of generated files/snippets).
   - [ ] Error display component for showing validation/generation errors.
@@ -564,8 +560,8 @@ Developers can work through this in order, opening PRs per milestone (or groupin
   - [ ] Add error recovery where possible (e.g., partial file generation cleanup).
   - [ ] Add error logging with context.
 
-- [ ] Route validation improvements:
-  - [ ] Add route simulation using DEX router contracts (on fork).
+- [ ] Route validation improvements (optional, future enhancement):
+  - [ ] Add route simulation using Beefy's router (on fork).
   - [ ] Validate route liquidity (if possible via on-chain data).
   - [ ] Add route discovery helpers for common tokens.
   - [ ] Provide clear error messages when routes are invalid.
