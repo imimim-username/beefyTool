@@ -2,7 +2,7 @@
 
 This document is a **step-by-step development checklist** for building the beefyTool project.
 
-- It assumes the architecture and structure described in `README.md` and `doc/architecture.md`.
+- It assumes the architecture and structure described in `README.md` and `docs/architecture.md`.
 - It is organized into **milestones**, each delivering a thin, working slice.
 - Each milestone contains:
   - Suggested **branch name**
@@ -28,9 +28,10 @@ Developers can work through this in order, opening PRs per milestone (or groupin
   - Hardhat for Solidity compilation & tests
   - React + Vite for the web UI
   - Vitest/Jest (or similar) for core TS tests
+  - EJS for template rendering (`ejs` npm package)
 
 - **Config versioning:**  
-  `StrategyConfig` includes a `configVersion` integer used to evolve `strategy-config.json` over time.
+  `StrategyConfig` includes a `configVersion` integer used to evolve `strategy-config.json` over time. Config migrations should be implemented when breaking changes occur.
 
 - **Testing:**
   - `npm test` for TS tests.
@@ -79,7 +80,7 @@ Developers can work through this in order, opening PRs per milestone (or groupin
     web/
     cli/
   templates/
-  doc/
+  docs/
   tests/
   .env.example
   README.md
@@ -91,6 +92,7 @@ Developers can work through this in order, opening PRs per milestone (or groupin
   - [ ] `core/config/model.ts`
   - [ ] `core/config/io.ts`
   - [ ] `core/config/validation.ts`
+  - [ ] `core/config/migration.ts` (for config version migrations)
   - [ ] `core/networks.ts`
   - [ ] `core/dex/solidlyVelodrome.ts`
   - [ ] `core/beefy/addressBook.ts`
@@ -101,8 +103,12 @@ Developers can work through this in order, opening PRs per milestone (or groupin
   - [ ] `core/generators/deployScripts.ts`
   - [ ] `core/generators/tests.ts`
   - [ ] `core/utils/fsUtils.ts`
-  - [ ] `core/utils/templating.ts`
+  - [ ] `core/utils/templating.ts` (EJS template rendering)
   - [ ] `core/utils/prompts.ts`
+  - [ ] `core/utils/errors.ts` (error types and utilities)
+- [ ] Set up EJS template engine:
+  - [ ] Install `ejs` npm package.
+  - [ ] Create basic templating utility in `core/utils/templating.ts`.
 
 - [ ] Add `.gitignore` (exclude `node_modules`, `.env`, `dist`, `out`, `artifacts`, `cache`, etc.).
 
@@ -139,6 +145,7 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 - [ ] In `src/core/config/io.ts`:
   - [ ] Implement functions to read/write `strategy-config.json`.
   - [ ] Ensure `configVersion` is included and validated.
+  - [ ] Call migration utility if config version is older than current.
 
 - [ ] In `src/core/config/validation.ts`:
   - [ ] Validate:
@@ -147,8 +154,15 @@ Developers can work through this in order, opening PRs per milestone (or groupin
     - [ ] Address format (basic 0x checks, plus optional checksum check).
     - [ ] Presence of required fields given `vaultMode` and strategy family.
     - [ ] Route start/end tokens match reward/native/LP tokens.
+    - [ ] Strategy name is safe for filesystem usage (no path traversal, valid characters).
 
-- [ ] Add a clear error type (e.g. `ConfigValidationError`) with helpful messages.
+- [ ] In `src/core/config/migration.ts`:
+  - [ ] Create migration framework (placeholder for now).
+  - [ ] Define migration function signature: `migrateConfig(config: any, fromVersion: number, toVersion: number)`.
+
+- [ ] In `src/core/utils/errors.ts`:
+  - [ ] Define error types: `ConfigValidationError`, `GenerationError`, `TemplateError`, `FileSystemError`.
+  - [ ] Each error type should include helpful messages and error codes.
 
 ### Tests / Acceptance Criteria
 
@@ -185,6 +199,7 @@ Developers can work through this in order, opening PRs per milestone (or groupin
   - [ ] Provide helper functions such as:
     - [ ] `getRouterForNetwork(network, dex)`.
     - [ ] (Stub) `getLpTokenInfo(provider, lpTokenAddress)` for later enrichment.
+    - [ ] (Stub) `validateRoute(provider, route, dex)` for later route validation.
 
 - [ ] In `src/core/beefy/addressBook.ts`:
   - [ ] For each network:
@@ -223,6 +238,8 @@ Developers can work through this in order, opening PRs per milestone (or groupin
     - [ ] `hardhat.config.ts` (template or inline).
     - [ ] `package.json` (dependencies for Hardhat + TypeScript).
     - [ ] `README.generated.md` with a short description of the strategy.
+    - [ ] `.env.example` with placeholder RPC URLs and deployment keys.
+    - [ ] Instructions for installing Beefy contract dependencies (npm package, git submodule, or manual).
 
 - [ ] In `src/core/generators/orchestrator.ts`:
   - [ ] Implement `generateStrategyProject(config: StrategyConfig, outDir: string)`:
@@ -233,6 +250,8 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 - [ ] In `src/core/utils/fsUtils.ts`:
   - [ ] Implement safe directory creation and file write helpers (e.g., fail if directory exists unless a flag allows overwrite).
+  - [ ] Sanitize file paths to prevent directory traversal attacks.
+  - [ ] Validate strategy names before using in file paths.
 
 ### Tests / Acceptance Criteria
 
@@ -253,7 +272,7 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 ### Tasks
 
-- [ ] In `templates/solidity/StrategySolidlyLP.sol.j2`:
+- [ ] In `templates/solidity/StrategySolidlyLP.sol.ejs`:
   - [ ] Create a minimal strategy contract template that:
     - [ ] Uses `pragma solidity ^0.8.0;`.
     - [ ] Imports appropriate OpenZeppelin 0.8 contracts.
@@ -264,11 +283,12 @@ Developers can work through this in order, opening PRs per milestone (or groupin
     - [ ] Implements standard Beefy methods at least in minimal form (deposit, withdraw, harvest, emergency behavior).
 
 - [ ] In `src/core/generators/contracts.ts`:
-  - [ ] Render `StrategySolidlyLP.sol.j2` with context built from `StrategyConfig` and metadata.
+  - [ ] Render `StrategySolidlyLP.sol.ejs` with context built from `StrategyConfig` and metadata using EJS.
   - [ ] Write it to `contracts/StrategySolidlyLP_<NormalizedName>.sol`.
+  - [ ] Sanitize all template variables before rendering (escape special characters where needed).
 
 - [ ] If `vaultMode === 'vault-and-strategy'`:
-  - [ ] Add `templates/solidity/VaultWrapper.sol.j2` with:
+  - [ ] Add `templates/solidity/VaultWrapper.sol.ejs` with:
     - [ ] Simple wrapper contract or initialization helper compatible with Beefy’s vault factory.
     - [ ] Name/symbol wiring and ownership transfer pattern.
 
@@ -279,12 +299,47 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 - [ ] Extend `tests/core/generators.test.ts` to check:
   - [ ] Strategy Solidity file is created.
   - [ ] Contains expected identifiers (e.g. `want`, `gauge`, `StratFeeManager`).
+  - [ ] Generated contract structure matches expected Beefy patterns.
 
 **PR:** _Add Solidly LP strategy Solidity templates and generator_
 
 ---
 
+## Milestone 4.5 – Security Validation & Contract Review Documentation (Basic)
+
+**Goal:** Add security warnings and documentation for generated contracts.
+
+**Branch:** `feature/security-validation-docs`
+
+### Tasks
+
+- [ ] Add security validation documentation:
+  - [ ] Create `docs/security.md` with security best practices.
+  - [ ] Document that generated contracts must be reviewed before deployment.
+  - [ ] List common security considerations for Beefy strategies.
+
+- [ ] Add security warnings to generated projects:
+  - [ ] Include security disclaimer in generated README.
+  - [ ] Add comments in generated contracts highlighting review points.
+  - [ ] Document recommended audit checklist.
+
+- [ ] (Future) Consider integrating static analysis tools:
+  - [ ] Research Slither or other Solidity static analyzers.
+  - [ ] Document how users can run security tools on generated contracts.
+  - [ ] Add optional static analysis step to generation (non-blocking).
+
+### Tests / Acceptance Criteria
+
+- [ ] Generated README includes security warnings.
+- [ ] Security documentation is complete and helpful.
+
+**PR:** _Add security validation documentation and warnings_
+
+---
+
 ## Milestone 5 – Deployment Scripts & Vault/Strategy Toggle (Basic)
+
+**Note:** This milestone should also document Beefy contract dependency installation in generated projects.
 
 **Goal:** Generate Hardhat deployment scripts for both **strategy-only** and **vault+strategy** flows.
 
@@ -292,14 +347,14 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 ### Tasks
 
-- [ ] In `templates/deploy/deployStrategy.ts.j2`:
+- [ ] In `templates/deploy/deployStrategy.ts.ejs`:
   - [ ] Script that:
     - [ ] Assumes an existing vault address (passed via env or args).
     - [ ] Deploys the strategy contract.
     - [ ] Initializes it with appropriate constructor/initializer args.
     - [ ] Logs addresses and a summary.
 
-- [ ] In `templates/deploy/deployVaultAndStrategy.ts.j2`:
+- [ ] In `templates/deploy/deployVaultAndStrategy.ts.ejs`:
   - [ ] Script that:
     - [ ] Uses `vaultFactory` to clone/create a vault when supported.
     - [ ] Initializes the vault (name, symbol, strategy).
@@ -330,7 +385,7 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 ### Tasks
 
-- [ ] In `templates/tests/basicStrategy.test.ts.j2`:
+- [ ] In `templates/tests/basicStrategy.test.ts.ejs`:
   - [ ] Create a test file that:
     - [ ] Deploys the generated strategy (and vault if applicable) on the Hardhat network.
     - [ ] Asserts:
@@ -353,44 +408,7 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 ---
 
-## Milestone 7 – Web Wizard (Basic Solidly LP Flow) (Basic)
-
-**Goal:** Implement a minimal, working web wizard that can build a basic Solidly LP `StrategyConfig` and run the generator.
-
-**Branch:** `feature/web-wizard-basic-solidly`
-
-### Tasks
-
-- [ ] In `src/web/App.tsx`:
-  - [ ] Implement a multi-step wizard:
-    - [ ] Step 1: Strategy name + network selection.
-    - [ ] Step 2: DEX + LP token + gauge/staking address.
-    - [ ] Step 3: Reward token + routes.
-    - [ ] Step 4: Beefy options (vault mode, strategist, etc.).
-    - [ ] Step 5: Summary + “Generate” button.
-
-- [ ] Implement:
-  - [ ] `NetworkSelector.tsx` (dropdown).
-  - [ ] `DexStrategyForm.tsx` (inputs for LP, gauge, reward token).
-  - [ ] `VaultStrategyToggle.tsx` (radio buttons or switch).
-  - [ ] `RoutesEditor.tsx` (manual route editing; auto-suggest later).
-  - [ ] `SummaryView.tsx` (read-only config summary).
-  - [ ] `OutputPreview.tsx` (optional preview of generated files/snippets).
-
-- [ ] Implement `wizardState.ts` to hold and update `StrategyConfig`-compatible state.
-- [ ] Wire the final step’s “Generate” button to call `generateStrategyProject` in `src/core/index.ts`, writing output under a configurable root (e.g. `out/`).
-
-### Tests / Acceptance Criteria
-
-- [ ] Manual:
-  - [ ] Run `npm run dev`, walk through the wizard, generate a project.
-  - [ ] In the generated project: `npm install`, `npx hardhat compile`, and `npx hardhat test` all succeed.
-
-**PR:** _Add basic web wizard for Solidly LP generation_
-
----
-
-## Milestone 8 – Config-Driven Mode & JSON Schema (Basic)
+## Milestone 7 – Config-Driven Mode & JSON Schema (Basic)
 
 **Goal:** Add a non-interactive mode that reads `strategy-config.json` and runs the generator, plus documentation of the config format.
 
@@ -400,16 +418,19 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 - [ ] In `src/core/index.ts`:
   - [ ] Expose `generateFromConfigFile(configPath: string, outDir: string)`.
+  - [ ] Handle config version migration automatically.
 
 - [ ] Implement a simple CLI entry in `src/cli/main.ts`:
   - [ ] Support `--config` and `--out` flags.
   - [ ] Wire to `generateFromConfigFile`.
+  - [ ] Add proper error handling and user-friendly error messages.
 
 - [ ] Update `package.json` to expose a CLI bin (optional, can be `npx`-only at first).
 
-- [ ] In `doc/config-format.md`:
+- [ ] In `docs/config-format.md`:
   - [ ] Describe the JSON schema for basic Solidly LP configs.
   - [ ] Include an example config file.
+  - [ ] Document config versioning and migration process.
 
 ### Tests / Acceptance Criteria
 
@@ -421,6 +442,52 @@ Developers can work through this in order, opening PRs per milestone (or groupin
     - [ ] `npx hardhat compile` and `npx hardhat test` succeed inside the generated project.
 
 **PR:** _Add config-driven generation mode_
+
+---
+
+## Milestone 8 – Web Wizard (Basic Solidly LP Flow) (Basic)
+
+**Goal:** Implement a minimal, working web wizard that can build a basic Solidly LP `StrategyConfig` and run the generator.
+
+**Branch:** `feature/web-wizard-basic-solidly`
+
+### Tasks
+
+- [ ] Set up local API server:
+  - [ ] Create `src/server/` directory with Express (or similar) server.
+  - [ ] Add API endpoint: `POST /api/generate` that accepts `StrategyConfig` and writes files.
+  - [ ] Add API endpoint: `POST /api/validate` for config validation.
+  - [ ] Wire Vite dev server to proxy API requests to local server.
+
+- [ ] In `src/web/App.tsx`:
+  - [ ] Implement a multi-step wizard:
+    - [ ] Step 1: Strategy name + network selection.
+    - [ ] Step 2: DEX + LP token + gauge/staking address.
+    - [ ] Step 3: Reward token + routes.
+    - [ ] Step 4: Beefy options (vault mode, strategist, etc.).
+    - [ ] Step 5: Summary + "Generate" button.
+
+- [ ] Implement:
+  - [ ] `NetworkSelector.tsx` (dropdown).
+  - [ ] `DexStrategyForm.tsx` (inputs for LP, gauge, reward token).
+  - [ ] `VaultStrategyToggle.tsx` (radio buttons or switch).
+  - [ ] `RoutesEditor.tsx` (manual route editing; auto-suggest later).
+  - [ ] `SummaryView.tsx` (read-only config summary).
+  - [ ] `OutputPreview.tsx` (optional preview of generated files/snippets).
+  - [ ] Error display component for showing validation/generation errors.
+
+- [ ] Implement `wizardState.ts` to hold and update `StrategyConfig`-compatible state.
+- [ ] Wire the final step's "Generate" button to call API endpoint instead of direct core function.
+- [ ] Handle API errors gracefully with user-friendly messages.
+
+### Tests / Acceptance Criteria
+
+- [ ] Manual:
+  - [ ] Run `npm run dev`, walk through the wizard, generate a project.
+  - [ ] In the generated project: `npm install`, `npx hardhat compile`, and `npx hardhat test` all succeed.
+  - [ ] API server handles errors gracefully.
+
+**PR:** _Add basic web wizard for Solidly LP generation_
 
 ---
 
@@ -484,7 +551,40 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 ---
 
-## Milestone 11 – Documentation, UX Polish & CI (Basic/Intermediate)
+## Milestone 11 – Error Handling & Route Validation Improvements (Intermediate)
+
+**Goal:** Improve error handling throughout the system and add route validation/simulation.
+
+**Branch:** `feature/error-handling-and-route-validation`
+
+### Tasks
+
+- [ ] Implement comprehensive error handling:
+  - [ ] All generator functions should throw typed errors from `core/utils/errors.ts`.
+  - [ ] Add error recovery where possible (e.g., partial file generation cleanup).
+  - [ ] Add error logging with context.
+
+- [ ] Route validation improvements:
+  - [ ] Add route simulation using DEX router contracts (on fork).
+  - [ ] Validate route liquidity (if possible via on-chain data).
+  - [ ] Add route discovery helpers for common tokens.
+  - [ ] Provide clear error messages when routes are invalid.
+
+- [ ] AddressBook validation:
+  - [ ] Add health checks for Beefy addresses (can query on-chain).
+  - [ ] Warn users if addresses seem incorrect or contracts don't exist.
+
+### Tests / Acceptance Criteria
+
+- [ ] Invalid routes are caught during validation with helpful messages.
+- [ ] Generation errors provide actionable feedback.
+- [ ] AddressBook validation tests pass.
+
+**PR:** _Improve error handling and route validation_
+
+---
+
+## Milestone 12 – Documentation, UX Polish & CI (Basic/Intermediate)
 
 **Goal:** Ensure the implementation fully aligns with `README.md` and `doc/architecture.md`, and provide a smooth developer and user experience.
 
@@ -496,11 +596,12 @@ Developers can work through this in order, opening PRs per milestone (or groupin
   - [ ] Confirm Quickstart is accurate and minimal.
   - [ ] Show both web wizard and config-driven workflows.
 
-- [ ] Update `doc/architecture.md` if any changes were made compared to the initial design.
+- [ ] Update `docs/architecture.md` if any changes were made compared to the initial design.
 - [ ] Flesh out:
-  - [ ] `doc/user-guide.md` – detailed examples of using the wizard and config mode.
-  - [ ] `doc/config-format.md` – full config schema (basic/intermediate/advanced fields).
-  - [ ] `doc/development-notes.md` – contributing guidelines, branch/PR conventions, how to run tests/CI.
+  - [ ] `docs/user-guide.md` – detailed examples of using the wizard and config mode.
+  - [ ] `docs/config-format.md` – full config schema (basic/intermediate/advanced fields).
+  - [ ] `docs/development-notes.md` – contributing guidelines, branch/PR conventions, how to run tests/CI.
+  - [ ] `docs/troubleshooting.md` – common issues, solutions, and FAQ.
 
 - [ ] Confirm `.env.example` includes all env vars actually used in code and tests.
 - [ ] (Optional) Add CI (e.g., GitHub Actions) to:

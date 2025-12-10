@@ -17,7 +17,7 @@ The goal is to give new contributors (including future-you) a clear mental model
 
 There are two main usage modes:
 
-1. **Interactive web wizard** — a local React app that walks the user through:
+1. **Interactive web wizard** — a local React app (with backend API server) that walks the user through:
    - Network selection (Ethereum, Optimism, Arbitrum, Base)
    - Strategy family selection (initially Solidly-style LP, e.g. Velodrome/Aerodrome)
    - LP & gauge/staking addresses
@@ -38,8 +38,9 @@ The architecture is organized around the following core concepts:
 - **Config model** – how strategies are described as data.
 - **Network/DEX metadata** – chain addresses, routers, and Beefy core infra.
 - **Generators** – how config + templates are turned into actual files.
-- **Templates** – Solidity/TypeScript/JSON templates used by generators.
-- **Web UI** – the main entry point for user interaction.
+- **Templates** – EJS templates for Solidity, TypeScript, and JSON used by generators.
+- **Web UI** – React-based interface with local API server for file generation.
+- **Error handling** – typed error system for validation, generation, and filesystem operations.
 
 ---
 
@@ -58,7 +59,8 @@ beefyTool/
 │   │   ├── config/
 │   │   │   ├── model.ts
 │   │   │   ├── io.ts
-│   │   │   └── validation.ts
+│   │   │   ├── validation.ts
+│   │   │   └── migration.ts
 │   │   ├── beefy/
 │   │   │   ├── addressBook.ts
 │   │   │   └── strategyFamilies.ts
@@ -71,7 +73,8 @@ beefyTool/
 │   │   └── utils/
 │   │       ├── fsUtils.ts
 │   │       ├── templating.ts
-│   │       └── prompts.ts
+│   │       ├── prompts.ts
+│   │       └── errors.ts
 │   ├── web/
 │   │   ├── main.tsx
 │   │   ├── App.tsx
@@ -81,8 +84,12 @@ beefyTool/
 │       ├── main.ts
 │       └── commands.ts
 ├── templates/
-├── doc/
+├── docs/
 ├── tests/
+├── src/
+│   └── server/           # Local API server for web UI (Express/Node)
+│       ├── index.ts
+│       └── routes.ts
 ├── package.json
 ├── hardhat.config.ts
 └── vite.config.ts
@@ -122,8 +129,9 @@ Key types:
   - `complexity`: `'basic' | 'intermediate' | 'advanced'` (for future features).
 
 `model.ts` declares these types.  
-`validation.ts` enforces correctness (supported networks, valid addresses, route coherence, required fields per strategy family).  
-`io.ts` handles reading/writing JSON config files.
+`validation.ts` enforces correctness (supported networks, valid addresses, route coherence, required fields per strategy family, filesystem-safe names).  
+`io.ts` handles reading/writing JSON config files and triggers migrations for older config versions.  
+`migration.ts` provides config version migration utilities when the schema evolves.
 
 ---
 
@@ -153,6 +161,9 @@ Generators use this to:
 
 - Offer sensible default routes.
 - Validate that each route starts and ends with the correct tokens.
+- (Future) Simulate routes on-chain to verify feasibility and liquidity.
+
+Route validation currently checks token addresses match; future versions may validate route existence via DEX router contracts on a fork.
 
 ### 4.3 Beefy Metadata (`src/core/beefy/`)
 
@@ -162,6 +173,8 @@ Generators use this to:
 - `keeper`.
 - `beefyFeeConfig`.
 - `beefyFeeRecipient`.
+
+**Maintenance:** Addresses should be periodically validated against on-chain state. Future versions may support dynamic address resolution via on-chain registries or APIs. Manual updates are required when Beefy infrastructure changes.
 
 `strategyFamilies.ts` describes, per strategy family:
 
@@ -209,12 +222,18 @@ This module wires:
 - TypeScript support for scripts and tests.
 - Network configuration using RPC URLs from environment variables.
 - Optional fork settings for local integration tests.
+- Instructions for installing Beefy contract dependencies (npm package, git submodule, or manual installation).
+
+**Beefy Contract Dependencies:** Generated projects need access to Beefy's base contracts and interfaces. The recommended approach is:
+1. If an npm package exists (`@beefy/contracts`), include it in `package.json`.
+2. Otherwise, document manual installation from the Beefy repository.
+3. Generated projects include clear instructions in their README.
 
 ### 5.3 Contracts Generator (`contracts.ts`)
 
 Generates:
 
-- The main **strategy contract**, using a template like `StrategySolidlyLP.sol.j2`.
+- The main **strategy contract**, using a template like `StrategySolidlyLP.sol.ejs`.
 
   The template should:
   - Use `pragma solidity ^0.8.0;`.
@@ -224,7 +243,7 @@ Generates:
   - Wire in `want`, `gauge`, router, Beefy core addresses, and swap routes.
   - Include standard Beefy lifecycle methods (deposit, withdraw, harvest, emergency handling).
 
-- Optionally, a thin **vault wrapper/initializer** when `vaultMode === 'vault-and-strategy'`, using a template such as `VaultWrapper.sol.j2`. This encapsulates:
+- Optionally, a thin **vault wrapper/initializer** when `vaultMode === 'vault-and-strategy'`, using a template such as `VaultWrapper.sol.ejs`. This encapsulates:
   - Vault cloning via the Beefy vault factory.
   - Initialization with name, symbol, and strategy.
   - Ownership transfer to the canonical Beefy vault owner (or configurable owner).
@@ -255,9 +274,11 @@ Generates a minimal test file:
 
 ---
 
-## 6. Web UI Layer (`src/web/`)
+## 6. Web UI Layer (`src/web/`) & API Server (`src/server/`)
 
-The web UI is the primary interaction layer for end users.
+The web UI runs in a browser but communicates with a local Node.js API server to perform file generation operations securely.
+
+### 6.1 Web UI Components (`src/web/`)
 
 Key pieces:
 
@@ -268,36 +289,66 @@ Key pieces:
 - `components/RoutesEditor.tsx` — configures swap routes (with auto-suggestions where possible).
 - `components/SummaryView.tsx` — shows a final summary of the assembled `StrategyConfig`.
 - `components/OutputPreview.tsx` — shows code snippets and file structure previews before generation.
+- `components/ErrorDisplay.tsx` — displays validation and generation errors to users.
 - `state/wizardState.ts` — encapsulates wizard state and actions.
 
-On “Generate”, the UI:
+### 6.2 API Server (`src/server/`)
 
-1. Builds a `StrategyConfig` from state.
-2. Validates it.
-3. Calls into `core/index.ts` to run the orchestrator and write files to disk (e.g., under `out/<strategy-name>/`).
+The API server provides secure access to filesystem and core generation functions:
+
+- `routes.ts` — API endpoints:
+  - `POST /api/validate` — validates a `StrategyConfig`.
+  - `POST /api/generate` — generates a project from a `StrategyConfig`.
+  - `GET /api/health` — server health check.
+- `index.ts` — Express server setup and Vite proxy configuration.
+
+**Architecture Rationale:** This separation ensures:
+- Browser security is maintained (no direct filesystem access).
+- File operations are isolated and secure.
+- Core generation logic can be reused by CLI and programmatic APIs.
+- Error handling is centralized in the server layer.
+
+On "Generate", the flow is:
+
+1. UI builds a `StrategyConfig` from state.
+2. UI sends config to `POST /api/validate` for validation.
+3. If valid, UI sends config to `POST /api/generate`.
+4. Server calls `core/index.ts` to run the orchestrator.
+5. Server writes files to disk (e.g., under `out/<strategy-name>/`).
+6. Server returns success/error response to UI.
 
 ---
 
 ## 7. Templates (`templates/`)
 
-The `templates/` directory holds all text templates used by generators.
+The `templates/` directory holds all **EJS (Embedded JavaScript)** templates used by generators. Files use the `.ejs` extension.
 
 - `solidity/`
-  - `StrategySolidlyLP.sol.j2` – core Solidly LP strategy contract.
-  - `VaultWrapper.sol.j2` – optional vault wrapper/initializer.
+  - `StrategySolidlyLP.sol.ejs` – core Solidly LP strategy contract.
+  - `VaultWrapper.sol.ejs` – optional vault wrapper/initializer.
 
 - `deploy/`
-  - `deployStrategy.ts.j2`
-  - `deployVaultAndStrategy.ts.j2`
+  - `deployStrategy.ts.ejs`
+  - `deployVaultAndStrategy.ts.ejs`
 
 - `tests/`
-  - `basicStrategy.test.ts.j2`
+  - `basicStrategy.test.ts.ejs`
 
 - `metadata/`
-  - `README.generated.md.j2`
-  - `strategyConfig.json.j2`
+  - `README.generated.md.ejs`
+  - `strategyConfig.json.ejs`
 
-Templates are **pure text** and should not contain business logic or validation. All decisions and data preparation happen in the TypeScript generator modules.
+**Template Engine:** EJS is used because:
+- Familiar JavaScript syntax.
+- Good TypeScript/Node.js ecosystem support.
+- Sufficient expressiveness for contract and script generation.
+- Rendered by `src/core/utils/templating.ts` using the `ejs` npm package.
+
+**Template Guidelines:**
+- Templates are **pure text** and should not contain business logic or validation.
+- All decisions and data preparation happen in the TypeScript generator modules.
+- Template variables are sanitized before rendering to prevent injection attacks.
+- Complex logic should be computed in generators and passed as simple data to templates.
 
 ---
 
@@ -319,6 +370,12 @@ The `tests/` directory covers:
      - Expected files are created.
      - `npx hardhat compile` succeeds in the generated project.
      - `npx hardhat test` passes the basic strategy test.
+     - Generated contracts have correct structure (smoke tests for key functions).
+
+**Future Testing Enhancements:**
+- Integration tests that validate strategy logic (harvest, withdraw, deposit flows).
+- Gas estimation checks to ensure generated strategies are efficient.
+- Fork-based tests that validate generated strategies against real on-chain state.
 
 This approach provides good regression protection while keeping test times reasonable.
 
@@ -334,9 +391,18 @@ beefyTool reads configuration from `.env` at the root of the tool:
 Security guidelines:
 
 - `.env` is never committed (enforced by `.gitignore`).
-- Private keys are never logged.
+- Private keys are never logged and should only be used for local/fork testing.
 - Generators only write files under an explicit output directory to avoid accidental overwrites.
+- File paths are sanitized to prevent directory traversal attacks.
+- Strategy names are validated for filesystem safety before use in paths.
+- Template variables are sanitized/escaped to prevent code injection.
 - The tool **defaults to local Hardhat networks or forks**; if users adapt generated projects for live deployment, that is a separate, explicit step outside of beefyTool.
+
+**Generated Code Security:**
+- Generated contracts are starting points and must be reviewed by experienced Solidity developers.
+- The tool does not perform security audits or vulnerability scanning.
+- Generated projects include security warnings in their README.
+- Users are responsible for security assessments before deployment.
 
 Generated projects can have their own `.env.example` for strategy-specific settings if desired.
 
@@ -400,3 +466,83 @@ With this architecture in mind, contributors can:
 - Quickly locate the correct area to modify.
 - Understand how user input becomes a fully generated Hardhat project.
 - Extend the system without introducing fragile, cross-cutting changes.
+
+---
+
+## 12. Error Handling
+
+beefyTool uses a typed error system defined in `src/core/utils/errors.ts`:
+
+- **ConfigValidationError** — validation failures (invalid network, missing fields, etc.).
+- **GenerationError** — errors during file generation (template rendering, filesystem issues).
+- **TemplateError** — template rendering errors (missing variables, syntax errors).
+- **FileSystemError** — filesystem operation failures (permission denied, path issues).
+
+Error propagation:
+1. Core modules throw typed errors.
+2. Orchestrator catches and wraps errors with context.
+3. API server converts errors to HTTP responses with user-friendly messages.
+4. CLI converts errors to console output with actionable guidance.
+5. Web UI displays errors to users in a helpful format.
+
+Error recovery:
+- Validation errors prevent generation and provide specific feedback.
+- Generation errors attempt cleanup of partial file generation.
+- Filesystem errors are caught before critical operations.
+
+---
+
+## 13. Config Versioning & Migration
+
+The `StrategyConfig` includes a `configVersion` integer for schema evolution. When the config schema changes:
+
+1. Increment the current `configVersion` in `model.ts`.
+2. Implement a migration function in `config/migration.ts` that transforms older configs to the new format.
+3. Update `io.ts` to automatically call migrations when loading older configs.
+4. Document breaking changes in `docs/config-format.md`.
+
+Migration functions follow the pattern:
+```typescript
+migrateConfig(config: any, fromVersion: number, toVersion: number): StrategyConfig
+```
+
+Migrations should be:
+- Idempotent (safe to run multiple times).
+- Backward-compatible where possible.
+- Well-documented with deprecation notices.
+
+---
+
+## 14. Performance Considerations
+
+Generation performance targets:
+- Single strategy generation: < 5 seconds on modern hardware.
+- Multi-strategy projects: linear scaling with number of strategies.
+
+Optimization strategies:
+- Template compilation can be cached (EJS compiles to functions).
+- File operations are batched where possible.
+- Heavy operations (route validation, on-chain queries) are optional and can be deferred.
+
+For large projects:
+- Consider incremental generation (only regenerate changed files).
+- Support generation in background workers if needed.
+
+---
+
+## 15. Dependency Management
+
+**Internal Dependencies:**
+- Core modules should use dependency injection for external services (RPC providers, filesystem).
+- This makes testing easier and allows swapping implementations.
+
+**Generated Project Dependencies:**
+- Hardhat projects depend on Beefy contracts and OpenZeppelin.
+- Primary: npm package if available (`@beefy/contracts`).
+- Fallback: git submodule or manual installation instructions.
+- Generated `package.json` includes all required dependencies with version constraints.
+
+**Version Compatibility:**
+- Document supported Solidity versions.
+- Document OpenZeppelin version compatibility.
+- Document Hardhat version requirements.

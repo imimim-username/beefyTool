@@ -61,24 +61,25 @@ beefyTool/
 │   └── cli/                       # Optional CLI entry (future)
 │       ├── main.ts
 │       └── commands.ts
-├── templates/                     # All text templates used by generators
+├── templates/                     # All text templates used by generators (EJS format)
 │   ├── solidity/
-│   │   ├── StrategySolidlyLP.sol.j2
-│   │   └── VaultWrapper.sol.j2
+│   │   ├── StrategySolidlyLP.sol.ejs
+│   │   └── VaultWrapper.sol.ejs
 │   ├── deploy/
-│   │   ├── deployStrategy.ts.j2
-│   │   └── deployVaultAndStrategy.ts.j2
+│   │   ├── deployStrategy.ts.ejs
+│   │   └── deployVaultAndStrategy.ts.ejs
 │   ├── tests/
-│   │   └── basicStrategy.test.ts.j2
+│   │   └── basicStrategy.test.ts.ejs
 │   └── metadata/
-│       ├── README.generated.md.j2
-│       └── strategyConfig.json.j2
+│       ├── README.generated.md.ejs
+│       └── strategyConfig.json.ejs
 ├── generated-examples/            # Example outputs for reference (optional)
-├── doc/
+├── docs/
 │   ├── architecture.md
 │   ├── config-format.md
 │   ├── user-guide.md
-│   └── development-notes.md
+│   ├── development-notes.md
+│   └── troubleshooting.md
 ├── tests/
 │   ├── core/
 │   │   ├── configValidation.test.ts
@@ -100,13 +101,13 @@ The exact filenames and module splits can evolve, but the separation between **c
 
 beefyTool provides:
 
-- A **local web wizard** for guided creation:
+- A **local web wizard** (running on a local development server) for guided creation:
   - Network (Ethereum, Optimism, Arbitrum, Base)
   - DEX + strategy family (starting with Solidly-style LP strategies such as Velodrome/Aerodrome)
   - Want LP token, gauge/staking contract, reward token
   - Beefy-specific fields (keeper, strategist, feeConfig, router, etc.) with sensible defaults
 
-- A **config-driven mode**, using a `strategy-config.json` file.
+- A **config-driven mode**, using a `strategy-config.json` file (supports CLI and programmatic usage).
 
 - A **mode toggle** between:
   - **Strategy-only** generation (contracts + deploy script targeting an existing vault).
@@ -119,6 +120,8 @@ beefyTool provides:
   - A generated README for the strategy project.
 
 The generated output is a complete Hardhat project that can be compiled and run on localhost forks, and later adapted into a Beefy PR or personal deployment.
+
+**⚠️ Important Security Note:** Generated contracts are starting points and should be reviewed by experienced Solidity developers before mainnet deployment. This tool does not perform security audits or vulnerability scanning. Always test thoroughly on testnets first.
 
 ---
 
@@ -137,6 +140,8 @@ ARBITRUM_RPC_URL=
 BASE_RPC_URL=
 
 # Optional private key for local/fork deployments ONLY
+# ⚠️ WARNING: Never use mainnet private keys. Use test keys only.
+# ⚠️ Only used for local Hardhat network or fork testing.
 DEPLOYER_PRIVATE_KEY=
 
 # Optional default strategist address (can also be set in the wizard/config)
@@ -178,7 +183,10 @@ npm install
 npm run dev
 ```
 
+This starts both the Vite dev server (for the React UI) and a local API server (for file generation).  
 Open `http://localhost:3000` in your browser.
+
+**Note:** The web UI communicates with a local Node.js API server to perform file generation. This architecture keeps filesystem operations secure and isolated from the browser.
 
 ### 3. Walk through the wizard
 
@@ -252,7 +260,7 @@ You can then adapt the project for your own deployment or for a Beefy PR.
   - Generated metadata/README
 
 - **Templates**  
-  Text templates for Solidity, TypeScript, and JSON—no logic, just structure and interpolation.
+  EJS (Embedded JavaScript) templates for Solidity, TypeScript, and JSON—no business logic, just structure and data interpolation. Templates are rendered by the generator modules.
 
 - **Web Wizard**  
   A React UI that builds a StrategyConfig, validates it, and invokes generators.
@@ -274,25 +282,59 @@ Tests include:
     - Generate project into a temp directory
     - Assert that key files exist and compile under Hardhat
     - Run a basic deployment test against a local Hardhat network or fork
+    - Validate that generated contracts have correct structure and basic functionality
 
 ---
 
 ## 📖 Documentation
 
-- `doc/architecture.md`  
+- `docs/architecture.md`  
   High-level system design: modules, data flows, and extension points.
 
-- `doc/config-format.md`  
+- `docs/config-format.md`  
   JSON schema for `strategy-config.json`, including basic/intermediate/advanced fields.
 
-- `doc/user-guide.md`  
+- `docs/user-guide.md`  
   Step-by-step walkthroughs for:
   - Using the web wizard
   - Editing a config file directly
   - Consuming the generated projects
 
-- `doc/development-notes.md`  
+- `docs/development-notes.md`  
   Contributing guidelines, branch naming, PR expectations, how to run tests, and CI notes.
+
+- `docs/troubleshooting.md`  
+  Common issues, solutions, and FAQ.
+
+## 🔧 Technical Details
+
+### Template Engine
+
+beefyTool uses **EJS (Embedded JavaScript)** templates (`.ejs` extension) for generating all code files. EJS provides:
+- Familiar JavaScript syntax for template logic
+- Good TypeScript/Node.js ecosystem support
+- Sufficient expressiveness for contract and script generation
+
+Templates are rendered by `src/core/utils/templating.ts` using the `ejs` npm package.
+
+### Beefy Contract Dependencies
+
+Generated projects depend on Beefy's contract interfaces and base contracts. The recommended approach:
+- **Primary:** Generated projects include Beefy contracts via npm package (e.g., `@beefy/contracts` if available) or git submodule
+- **Fallback:** Users manually install Beefy contracts from the official repository
+- Generated `package.json` includes instructions for installing dependencies
+
+### Web UI Architecture
+
+The web UI runs in a browser but communicates with a local Node.js API server (started alongside the Vite dev server) to:
+- Validate configurations
+- Generate files to disk
+- Access filesystem safely
+
+This separation ensures:
+- Browser security is maintained
+- File operations are secure
+- The core generation logic can be reused by CLI and programmatic APIs
 
 ---
 
@@ -304,6 +346,21 @@ Contributions are welcome. Recommended flow:
 2. Create a branch like `feature/<short-description>`.
 3. Implement the tasks for that milestone.
 4. Add/extend tests and ensure they pass.
-5. Open a PR with a clear, imperative title (e.g. “Add basic Solidly LP strategy generator”).
+5. Open a PR with a clear, imperative title (e.g. "Add basic Solidly LP strategy generator").
 
 Keep documentation and architecture in sync with actual behavior as features evolve.
+
+## ⚠️ Security & Safety
+
+- **Generated code review required:** All generated contracts should be reviewed by experienced Solidity developers before deployment.
+- **Test thoroughly:** Always test generated strategies on testnets before mainnet use.
+- **No security audits:** This tool does not perform security audits. Users are responsible for security assessments.
+- **Private key safety:** Never use mainnet private keys in `.env`. Only use test keys for local development.
+
+## 🐛 Troubleshooting
+
+See `docs/troubleshooting.md` for common issues and solutions. Common topics:
+- Template rendering errors
+- Config validation failures
+- Hardhat compilation issues
+- AddressBook resolution problems
