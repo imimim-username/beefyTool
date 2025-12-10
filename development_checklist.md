@@ -47,27 +47,27 @@ Developers can work through this in order, opening PRs per milestone (or groupin
 
 ### Tasks
 
-- [x] Initialize a new Git repository.
-- [ ] Add minimal `package.json` with:
-  - [ ] Project metadata (name `beefyTool`, version, description).
-  - [ ] Scripts:
-    - [ ] `dev` → Vite dev server.
-    - [ ] `build` → Vite build.
-    - [ ] `test` → core TS tests.
-    - [ ] `hardhat:compile` → `hardhat compile`.
-    - [ ] `hardhat:test` → `hardhat test`.
+- [ ] Initialize a new Git repository.
+- [x] Add minimal `package.json` with:
+  - [x] Project metadata (name `beefyTool`, version, description).
+  - [x] Scripts:
+    - [x] `dev` → Vite dev server.
+    - [x] `build` → Vite build.
+    - [x] `test` → core TS tests.
+    - [x] `hardhat:compile` → `hardhat compile`.
+    - [x] `hardhat:test` → `hardhat test`.
 
 - [ ] Add `tsconfig.json` with reasonable TS settings for Node + React + Hardhat.
-- [ ] Add root-level `hardhat.config.ts` with:
-  - [ ] Basic Solidity 0.8.x config.
-  - [ ] TypeScript support.
-  - [ ] Placeholder networks (no RPC URLs needed yet).
+- [x] Add root-level `hardhat.config.ts` with:
+  - [x] Basic Solidity 0.8.x config.
+  - [x] TypeScript support.
+  - [x] Placeholder networks (no RPC URLs needed yet).
 
 - [ ] Add basic Vite + React setup:
   - [ ] `src/web/main.tsx`
   - [ ] `src/web/App.tsx` with a “Hello, beefyTool” placeholder.
 
-- [ ] Create directory layout:
+- [x] Create directory layout:
 
   ```text
   src/
